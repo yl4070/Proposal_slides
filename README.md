@@ -2,7 +2,7 @@
 
 Touying template for online presentation.
 
-Link: https://touying-typ.github.io/touying-template/
+Link: https://yl4070.github.io/Proposal_slides/
 
 ## Use this template
 
