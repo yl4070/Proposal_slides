@@ -1,11 +1,14 @@
-#import "@preview/touying:0.4.0": *
+#import "@preview/touying:0.4.1": *
 #import "@preview/mitex:0.2.2": *
 #import "metropolis.typ"
 #import "@preview/colorful-boxes:1.3.1": outline-colorbox
 #import "@preview/m-jaxon:0.1.1" as m-jaxon
-#import "@preview/fletcher:0.4.5" as fletcher: diagram, node, edge
+#import "@preview/fletcher:0.5.1" as fletcher: diagram, node, edge
+#import fletcher.shapes: house, hexagon
 #import "defs.typ": *
 #import "@preview/ctheorems:1.1.2": *
+#import "@preview/pinit:0.1.3": *
+
 #show: thmrules.with(qed-symbol: $square$)
 
 #let lemma = thmbox("lemma", "Lemma", fill: rgb("#eeffee")).with(numbering: none)
@@ -37,7 +40,7 @@
 #show: init
 
 #show strong: alert
-#show regex("(e\.g\.)|(i\.e\.)|etc\."): it => text(style: "italic")[#it]
+#show regex("(e\.g\.)|(i\.e\.)|(s\.t\.)|(w\.r\.t\.)|etc\."): it => text(style: "italic")[#it]
 #show regex("\s(ie|eg)\s"): it => {
   let re1 = repr(it).at(2)
   let re2 = repr(it).at(3)
@@ -53,6 +56,34 @@
 ])
 
 #touying-outline()
+
+== Why Do We Care About Invariants?
+
+
+#figure(caption: "Expressions don't matter!",
+grid(align: auto, columns: 2, column-gutter: -9em,
+rect(fill: luma(230), radius: (
+    top-left: 5pt,
+    top-right: 5pt,
+    bottom-right: 5pt,
+    bottom-left: 5pt), width: 50%, height: 45%
+  ),
+rect(fill: luma(230), radius: (
+    top-left: 5pt,
+    top-right: 5pt,
+    bottom-right: 5pt,
+    bottom-left: 5pt), width: 50%, height: 45%
+  )
+))
+#place(left, dx: 7em, dy: -6em)[ #text(emoji.cat.face.smirk, size: 46pt) ]
+#place(left, dx: 25em, dy: -8em)[ #text(emoji.cat.face.shock, size: 52pt) ]
+
+- Build more trustworthy and reliable models
+
+- Gain deeper insights into the fundamental mechanisms of learning
+
+- Building model when data is scarce
+
 == Dissertation Objective
 #outline-colorbox(
   title: "Objective",
@@ -64,25 +95,143 @@
 #pause
 
 - Focus on the idea of invariants from the ground up
-- Focus on the optimal recovery viewpoint
+- Provide an alternative, optimal recovery view (not try to replace the classical view)
 
-// #pause
-// *What is not:*
+#pause
 
-// - 
+#emoji.tomato
+Rather than concrete algorithms, focus on the study of theory behind learning
+
+#outline-colorbox(
+  title: "Spirit",
+  width: auto,
+  radius: 2pt,
+  centering: false
+)[
+    The best understanding of what one can see comes from theories of what one can’t see.
+    #align(right)[@smale2007]
+]
 
 
-== Introduction
 
 
-- Alternative view of learning theory
-  - Recovery maximal learnable space
-  - Further shrink down space with invariants
-  - Characterization of hypothesis space with generalization
-// - Learning theory in Hilbert space/RKHS is well known but limited. 
 
-// - Increasing need for a learning theory targeting Banach space or RKBS.
-- Invariants are essential for any learning algorithm: we require more in-depth understanding of invariants.
+
+== Learning with or without invariants
+
+- Informally, any *mapping* $f$ can be expressed as a composition of \ #align(center)[an *injection*, an *isomorphism* #sym.amp a *surjection*.]
+- Hence, not rigorously, denote the difficulty with the length of the bar
+
+#let blob(pos, label, tint: white, ..args) = node(
+	pos, align(center, label),
+	width: 46mm,
+    height: 20mm,
+	fill: tint.lighten(60%),
+	stroke: 1pt + tint.darken(20%),
+	corner-radius: 5pt,
+	..args,
+)
+
+#align(center)[
+#diagram(
+   spacing: 8pt, debug: 0,
+	cell-size: (8mm, 10mm),
+	edge-stroke: 1pt,
+	edge-corner-radius: 5pt,
+	mark-scale: 70%,
+   blob((0,1), [Injection Isomorphism], tint: yellow, shape: hexagon),
+   edge("=="),
+   blob((2,1), [Surjection], tint: green, shape: hexagon, width: 170mm),
+   
+   node((0, 2), [Less invariants]),
+   node((2, 2), [More Learning]),
+  
+)
+#v(1em)
+#diagram(
+   spacing: 8pt, debug: 0,
+	cell-size: (8mm, 10mm),
+	edge-stroke: 1pt,
+	edge-corner-radius: 5pt,
+	mark-scale: 70%,
+ 
+   blob((0,1), [Injection \ Isomorphism], tint: yellow, shape: hexagon, width: 170mm),
+   edge("=="),
+   blob((2,1), [Surjection], tint: green, shape: hexagon),
+   
+   node((0, 2), [More invariants]),
+   node((2, 2), [Less Learning]),
+ )]
+
+
+== Classical Learning Problems
+
+
+#outline-colorbox(
+  title: "Task (Supervised Learning)",
+  width: auto,
+  radius: 2pt,
+  centering: false
+)[
+  Learning the best possible mapping $f$, based on the provides data pairs ${(x, y)}^m$,\ such that $f(x) = y$.
+]
+
+#pause
+#block[
+*A typical data fitting process*:
+
++ Given ${ (x, y)}^m$ of samples
+
++ Form hypothesis class $h$, parameterized by $w$, s.t. $h(x; w) = f(x)$ 
+
++ Optimize $h$ over $w$ with data provided, w.r.t. some loss function
+
+]
+== An Alternative Perspective of Learning
+
+=== #emoji.darts Focus on the idea of *optimal recovery*
+
+
+#pause
+
+- It's a top-down approach of narrowing down the $h$ that satisfy all desirable properties.
+
+#pause
+=== Three-Step View of Learning
+
+
++ Determine the largest hypothesis space that can be recovered properly with data.
+  - Based on compressive sensing, information theory, etc.
++ Shrink the initial hypothesis space with invariants
+  - Optimal recovery view: given functionals $ell_1, ell_2,..., ell_n$, what set of functions are feasible?
++ Classical data fitting under refined hypothesis space.
+
+#v(2em)
+#place(right+bottom, dy: -1.5em)[
+  #scale(80%,
+  diagram(
+    node-stroke: 1pt, node-inset: 10pt,
+    edge-stroke: 1pt, debug: 0,
+    node((0,0), [1. Initial Hypothesis Recovery], corner-radius: 2pt, extrude: (0, 3)),
+    edge("-|>"),
+    node((1,0), [2. Learning with Invariants], corner-radius: 2pt, extrude: (0, 3)),
+    edge("-|>"),
+    node((2,0), [3. Data Fitting], corner-radius: 2pt, extrude: (0, 3))
+    // edge("d,r,u,l", "-|>", [Yes], label-pos: 0.1)
+  ))
+]
+
+
+// == Introduction
+
+// - Alternative view of learning theory
+//   - Recovery maximal learnable space
+//   - Further shrink down space with invariants
+//   - Characterization of hypothesis space with generalization
+// // - Learning theory in Hilbert space/RKHS is well known but limited. 
+
+// // - Increasing need for a learning theory targeting Banach space or RKBS.
+// - Invariants are essential for any learning algorithm: we require more in-depth understanding of invariants.
 
 
 == Research Questions
@@ -91,18 +240,17 @@
 
 - How do we form hypothesis space based on data?
 
-#pause
 - How to best formulate rigorously the concepts of invariants?
 
     - How does knowledge injection play a role in learning theory?
 
 - What function classes are best for generalization? 
 
-#pause
 *Applications*
 
 - How do we understand the domain adaptation using the theory we develop? 
-#pause
+
+
 // - How to apply the learning theory to modern neural networks?
 
 //   - How do understand the generalization behavior better using our theory?
@@ -128,83 +276,63 @@
 
 // - Connection between convexity of neural networks to RKBS
 
-== Three-Step View of Learning
+
+// == Methodology/ Math Tools
 
 
-+ Determine the largest hypothesis space that can be recovered properly with data.
-  - Based on compressive sensing, information theory
-+ Shrink the initial hypothesis space with invariants
-  - Optimal recovery view: given functionals $ell_1, ell_2,..., ell_n$, what set of functions are feasible?
-+ Classical data fitting under refined hypothesis space.
+// *Overview*
 
-#place(right+bottom, dy: -2em)[
-  #scale(80%,
-  diagram(
-    node-stroke: 1pt, node-inset: 10pt,
-    edge-stroke: 1pt, debug: 0,
-    node((0,0), [1. Initial Hypothesis Recovery], corner-radius: 2pt, extrude: (0, 3)),
-    edge("-|>"),
-    node((1,0), [2. Learning with Invariants], corner-radius: 2pt, extrude: (0, 3)),
-    edge("-|>"),
-    node((2,0), [3. Data Fitting], corner-radius: 2pt, extrude: (0, 3))
-    // edge("d,r,u,l", "-|>", [Yes], label-pos: 0.1)
-  ))
-]
+// - Formulate a learning theory in Banach space from the approximation theory perspective
 
-== Methodology/ Math Tools
+// - Formulate a unified view of invariants and complete learning problem
+
+// - Utilize tools from functional analysis to rigorously derive our learning theory
 
 
-*Overview*
+// == Concentration of Measure Theory
 
-- Formulate a learning theory in Banach space from the approximation theory perspective
-
-- Formulate a unified view of invariants and complete learning problem
-
-- Utilize tools from functional analysis to rigorously derive our learning theory
+// Classic works @ledoux2005
 
 
-== Concentration of Measure Theory
+// == Methodology: Approximation Theory
 
-Classic works @ledoux2005. 
+// - Very loosely, the aim of approximation theory is to find the optimal function within a given space, that provides the best approximation to the target function. 
 
+// - This connects with learning theory closely e.g. @cucker2007. 
 
-== Methodology: Approximation Theory
-
-- Very loosely, the aim of approximation theory is to find the optimal function within a given space, that provides the best approximation to the target function. 
-
-- This connects with learning theory closely e.g. @cucker2007. 
-
-  - We aim to find the best approximation in the hypothesis space.
+//   - We aim to find the best approximation in the hypothesis space.
 
 
-== Methodology: Radon Transform
+// == Methodology: Radon Transform
 
-#mitext(`
-\newcommand{\ra}{\mathcal R} 
-\newcommand{\s}{\mathbb S} 
-\newcommand{\pluto}{\mathbb e} 
-$$
-\check{f}(p, \xi) = \ra f = \int f(x) \delta(p - \xi \cdot x ) dx
-$$
+// #mitext(`
+// \newcommand{\ra}{\mathcal R} 
+// \newcommand{\s}{\mathbb S} 
+// \newcommand{\pluto}{\mathbb e} 
+// $$
+// \check{f}(p, \xi) = \ra f = \int f(x) \delta(p - \xi \cdot x ) dx
+// $$
 
-where $(p, \xi) \in \s ^{d-1}\times \R$. Then, for $n\geq 3$ and $n$ is odd, we have
+// where $(p, \xi) \in \s ^{d-1}\times \R$. Then, for $n\geq 3$ and $n$ is odd, we have
 
-$$
-f(x) = \pluto_n \Delta_x^{(n-1)/2} \int_{|\xi|=1}\check{f}(\xi\cdot x, \xi) d\xi
-$$
-where $\Delta_x$ is the Laplacian operator, and
-$$
-\pluto_n = \frac{(-1)^{(n-1)/2}}{2(2\pi)^{(n-1)}} = \frac{1}{2}\frac{1}{(2\pi i)^{n-1}}.
-$$
+// $$
+// f(x) = \pluto_n \Delta_x^{(n-1)/2} \int_{|\xi|=1}\check{f}(\xi\cdot x, \xi) d\xi
+// $$
+// where $\Delta_x$ is the Laplacian operator, and
+// $$
+// \pluto_n = \frac{(-1)^{(n-1)/2}}{2(2\pi)^{(n-1)}} = \frac{1}{2}\frac{1}{(2\pi i)^{n-1}}.
+// $$
 
-== Methodology: Radon Transform
+// == Methodology: Radon Transform
 
-For $n$ is even, we have
+// For $n$ is even, we have
 
-$$
-f(x) = \frac{\pluto_n}{i\pi}\Delta_x^{(n-2)/2} \int_{|\xi|=1} d\xi \int_{-\infty}^\infty dp \frac{\check{f}_p(p, \xi)}{p-\xi\cdot x}
-$$
-`)
+// $$
+// f(x) = \frac{\pluto_n}{i\pi}\Delta_x^{(n-2)/2} \int_{|\xi|=1} d\xi \int_{-\infty}^\infty dp \frac{\check{f}_p(p, \xi)}{p-\xi\cdot x}
+// $$
+// `)
+
+= Literature Review 
 
 == Literature Review: Learning Theory
 
@@ -214,6 +342,14 @@ $$
 - @vapnik2009 introduces the idea of privileged information
 - @vapnik2019@vapnik2019aa introduces the complete learning theory with statistical invariants, i.e. predicates
 
+== Literature Review: Kernel Alignments and Generalization
+
+- @jacot2020 suggest that kernel alignment is crucial in generalization error, and model can only learn if the signal passes the Signal Capture Threshold.
+
+- @canatar2020 provides similar results using replica methods. Suggesting that mode with larger eigenvalue learn faster. 
+
+- @simon2021 also proposed the concepts of learnability and conservation law, obtaining similar results to kernel alignment.
+
 == Literature Review: Reproducing Kernel Banach Space
 
 - @zhang2009 first proposes the idea
@@ -221,29 +357,34 @@ $$
 - @lin2022 provides unified definition for RKBS with bilinear form
 
 - @parhi2020 shows that neural networks are representors in RKBS (with semi-norm)
-  - implies model specification issue if not with neural networks
-    - Q: if neural networks don't provide the best solution, is that because the solution is in difference space? @elbrachter2019
+  // - implies model specification issue if not with neural networks
+  //   - Q: if neural networks don't provide the best solution, is that because the solution is in difference space? @elbrachter2019
 
 - @bartolucci2023 proposes a revised version RKBS with norm instead of semi-norm, and apply it to neural networks
 
 
-== Literature Review: Neural Networks
+// == Literature Review: Neural Networks
 
-- @wang2020 shows that there's a convex landscape in two-layer networks.
+// - @wang2020 shows that there's a convex landscape in two-layer networks.
 
-- @yang2019ab@yang2019ac shows that most architectures of neural networks have Gaussian process as the limits
+// - @yang2019ab@yang2019ac shows that most architectures of neural networks have Gaussian process as the limits
 
-- @parhi2022 shows the optimal solution has the form of neural networks
-  - derive a natural occurrence of residual mechanism in the solution
+// - @parhi2022 shows the optimal solution has the form of neural networks
+//   - derive a natural occurrence of residual mechanism in the solution
 
-= Learning From An Optimal Recovery Perspective
+// = Learning From An Optimal Recovery Perspective
 
-== Hypothesis Recovery
+= Initial Hypothesis Recovery
 
 // - We need first to understand our learning goal. 
 - We focus on recoverability, or learnability, of the problem. 
 
-- Since the learning problem is ill-posed, we only consider the hypothesis space that is at least *sparsely* recoverable.
+- Since the learning problem is ill-posed, we only consider the hypothesis space that we can afford to learn. 
+  #pause
+  - Limited Data 
+  - Polynomial search depth
+
+// at least *sparsely* recoverable.
 
 // - Instead of approximation error analysis, we restrict ourselves to the information we have. 
 
@@ -257,7 +398,95 @@ $$
 // - The learning problems that interest us, however, are finding the recovery operators.
 //   - $ cal(F) := { f: (X,Y) -> Q: Q(x) = y, forall (x, y) in (X,Y)} $
 
-== Function Space View
+
+== Limitation Posed By The Data: V-Entropy
+
+#definition[(Informally, @xu2020)
+  Let $V$ be a set of functions, $V in.rev f: cal(X) arrow PP $, the set ${f[emptyset]}_V$ covers $ union.big_(f in V, x in cal(X)) "range"(f[x])$. Then,
+  
+  $ H_V (Y | X) = - inf_(f in V) EE_(x, y) log f[x](y) $
+]
+#pause
+- $V$ determined the amount of information we can utilized from $cal(X), cal(Y)$.
+- However, the size of data available bounds from above how large the set of $V$ can be.
+
+
+== Error Bounds
+
+Not rigorously, to estimate the best possible prediction in $V$, we have minimal expected probability of making error (surprises)
+
+$
+// inf_PP integral_cal(D)  PP(y) dif (x,y) &<= 
+inf_(f in V) integral_cal(D) f[x](y) dif (x, y)  &=  inf_(f in V) EE_cal(D) f[x](y)\
+&>= exp(-H_V (Y | X)).
+$
+
+#pause
+#block[
+- We want *larger* $H_V (Y | X)$, i.e. *larger* $V$.
+
+- Accuracy requirement gives *lower bound* the size of V
+]
+// Similarly, the best possible error for a null model is $1 - exp(-H_V (Y))$.
+// Thus, the improvement by incorporating $X$ is
+
+// $
+// H_V (Y) - H_V (Y | X).
+// $
+
+// Therefore, we have the best possible improvements corresponds to 
+// $
+// I_V (X -> Y) = H_V (Y | X) - H_V (Y).
+// $
+
+== Complexity Constraints
+
+According to Lemma 3 @xu2020, we know the empirical estimation error of $H_V (Y | X)$ is bounded above by (with at least $1-delta$ probability)
+$
+2 frak(R)_m (cal(G)_V) + 2B sqrt((2 log 1/delta)/m)
+$
+
+where $cal(G)_V = {g | g(x, y) = log f[x](y) in [-B, B], f in V}$. 
+
+#pause
+#block[
+- We want *smaller* $V$.
+
+- Estimability gives *upper bounds*
+]
+#pause
+#block[
+- So we should pick the largest space that are learnable from the data,\ i.e. *recover the optimal hypothesis space.*
+]
+== Error Decomposition
+
+- Traditionally, we decompose the generalization error into *estimation error* and *approximation error*.
+
+#pause
+
+- This is a certain level of arbitrariness of decomposition in practice:
+
+  - Ground truth is unobtainable
+
+  - Estimation error is limited by the available data as well as our choice of hypothesis 
+
+  
+== Domain Adaptation View of Generalization
+
+- Generalization and domain adaptation are inevitably intertwined
+
+- We consider any testing data comes from domain different from training domain 
+
+#pause
+
+#proposition[
+  Suppose that the empirical distribution of the data is $cal(D)$, the target function is $f ∈ L_2$. We further assume that the range of functions are bounded by $M$. Then, the generalization error on $cal(D)_T$ , for a hypothesis $h$, is $ cal(E)(h) <= cal(E)_z( f ) + C M^2 sqrt(8 op("KL")(cal(D)_T || cal(D))) $ for some constant C, where $cal(E)_z$ is the empirical error for the sample z, and KL(·||·) is the KL divergence.
+]
+
+
+
+
+== Encoding View of Optimal Space
 
 - We bridge the function recovery with binary encoding. Sparsity of the encoded vector represents the complexity of the learning problem. 
   - Only sparse vector can be recovered with "few" samples, analogous to below Nyquist rate.
@@ -268,6 +497,7 @@ $$
   - Minimal coding length:
   $ L(epsilon, cal(C)) := min{cal(l) in NN, exists(E, D) in frak(E)^cal(l)times frak(D)^cal(l): sup_(f in cal(C)) ||D(E(f))-f||_(L^2(Omega)) <= epsilon}$
 // - We choose the hypothesis space $cal(H)(epsilon, delta)$ for the a given data set $cal(D)$, such that the recovery error for encoded vector of length $L(epsilon, cal(C)))$ less than $delta$. 
+
 
 == Encoding Properties
 
@@ -341,10 +571,12 @@ $$
 
 // - We can bound the generalization error with encoding length $ss, "and" N$.
 
+
+
 == Sparsity Recovery
 
-- Any function space can be covered by a closure of hypothesis space $overline(cal(H)_L)$ with large enough length $L$.
-- We do not know the ground truth length of the function space
+// - Any function space can be covered by a closure of hypothesis space $overline(cal(H)_L)$ with large enough length $L$.
+// - We do not know the ground truth length of the function space
 
 - Given the sample size $m$, we determine the length of the encoded vector of function, so that it can be recovered as $L(epsilon, cal(C))$-sparse vector.
 - Since stable recovery require the number of sample 
@@ -352,6 +584,8 @@ $$
 $ m>= C s ln(e N/s) $
 for some constant $C$, hence, $ N <= ss e^(m/(C ss)-1). $
 - The largest hypothesis are functions can be encoded with vectors at most length $N$.
+
+
 
 == Examples in Hilbert Space
 #let hyp = $cal(H)$
@@ -362,7 +596,7 @@ $ frak(N)(B_R, eta) <= (2R/eta + 1)^N $
 $ P_{z in Z^m}(sup_f L_z(f)<= epsilon) >= 1- frak(N)(hyp, epsilon/(8M))exp(-(m epsilon^2)/(8M^4)) $
 
 #proposition[
-  Suppose that the hypothesis space is BR as defined in eq. (4.3), such that $| f (x)| ≤ M, ∀ f ∈
+  Suppose that the hypothesis space is $B_R$ as defined, such that $| f (x) | ≤ M, ∀ f ∈
 B_R$, and suppose that the sample size is $m$. We have $1 − δ$ confidence that $sup_(f in B_R) L_z( f ) ≤ ε$, only if
 $
 R ≤ ε/(16M) (( δ/∆ )1/N − 1 )
@@ -370,18 +604,10 @@ $
 where $∆ = exp( − (m ε^2) /(8M^4))$.
 ]
 
-== Domain Adaptation View of Generalization
 
-- Typical approximation error estimates rely on too much assumptions, since we don't know the ground truth
-
-- Generalization and domain adaptation are inevitably intertwined
-
-- We consider any testing data comes from domain different from training domain 
+// == Difference From Classical View
 
 
-#proposition[
-  Suppose that the empirical distribution of the data is $cal(D)$, the target function is $f ∈ L_2$. We further assume that the range of functions are bounded by $M$. Then, the generalization error on $cal(D)_T$ , for a hypothesis $h$, is $ cal(E)(h) = cal(E)_z( f ) + C M^2 sqrt(8 op("KL")(cal(D)_T || cal(D))) $ for some constant C, where $cal(E)_z$ is the empirical error for the sample z, and KL(·||·) is the KL divergence.
-]
 
 // == Research Direction
 
@@ -401,65 +627,148 @@ where $∆ = exp( − (m ε^2) /(8M^4))$.
 
 // Projection, hypothesis testing
 
-= Invariants Construction
-  
-== Learning using Statistical Invariants and Predicates
+= Learning with Invariants 
 
-#alert[Suffer from information collapse issue]
+
+== Goal of Invariants
+
+#diagram(
+   spacing: 8pt, debug: 0,
+	cell-size: (8mm, 10mm),
+	edge-stroke: 1pt,
+	edge-corner-radius: 5pt,
+	mark-scale: 70%,
+ 
+   blob((0,1), [Injection \ Isomorphism], tint: yellow, shape: hexagon, width: 170mm),
+   edge("=="),
+   blob((2,1), [Surjection], tint: green, shape: hexagon),
+   
+   node((0, 2), [More invariants]),
+   node((2, 2), [Less Learning]),
+ )
+
+#v(3em)
+- Provide desirable properties of the hypothesis
+- Incremental *predicates* that serve as an alternative source of information
+
+
+== Pioneer: Learning using Statistical Invariants (LUSI)
+
 
 - @vapnik2019, @vapnik2019aa Attempt to construct statistical invariants as a way to inject knowledge or intelligence into the learning process
 
-- Minimal empirical success, often less than $1%$ improvements
+  - Minimal empirical success, either by Vapnik or others;
+  - Often less than $1%$ improvements
 
+*However, it suffers from information collapse issue*
 
-== LUSI 
+== Analysis on LUSI 
 
 - We show that the methods suffer from fundamental issue for the statistical invariants to be effective.
-- Predicates
-$ cal(P) = 1/m sum_s Phi_s Phi_s^T $
+- Predicates (average over $m$ $Phi^(N, 1)$)
+
+$ cal(P) = 1/m sum_s^m Phi_s Phi_s^T $
 
 - Loss functions
 
 $ cal(L) = (Y-f(X))^T (gamma I + tau cal(P))(Y-f(X)) $
 
+== LUSI Loss function
+
+
+$ cal(L) = (Y-f(X))^T (gamma I + tau cal(P))(Y-f(X)) $
+
+#emoji.medal Loss function is just weighted sum of squares
+
 #lemma[
-  Suppose f is a function of a learning task from the data $(X, Y) = {(x_i, y_i)}_i$ using predicates $cal(P)$ and loss function $cal(L)$ constructed earlier. The loss function is equivalent to weighted sum of squares as
+  Suppose $f$ is a function of a learning task from the data $(X, Y) = {(x_i, y_i)}_i$ using predicates $cal(P)$ and loss function $cal(L)$ constructed earlier. The loss function is equivalent to weighted sum of squares as
   $ cal(L) = sum_i (sum_j (gamma+ lambda_j) q_(j i))(y_i - f(x_i))^2 $
   where $lambda_i$ is the eigenvalue of $tau cal(P)$, and $q_(j i)$ is the entry of orthonormal matrix consisting of the corresponding eigenvectors.
 ]
 
-== LUSI
+== Analysis on LUSI 
+
+Hence, only weights that compensate the under-representation of the data samples can help with generalization.
 
 #definition("neighborhood density")[
   Let $tilde(D) ⊂ D$ be the training data, then neighborhood error density for a given data pair $(x_i, y_i) ∈ tilde(D)$ defined as
- ̃$ tilde(C)_(x_i) = integral_((x,y)∈D: arg min_(tilde(x)∈ tilde(D)) d(x,tilde(x)) = x_i) C_x d P(x, y). $
+  
+$ tilde(C)_(x_i) = integral_((x,y)∈D: arg min_(tilde(x)∈ tilde(D)) d(x,tilde(x)) = x_i) C_x dif P(x, y). $
  
-where d is some metric, L is some loss function, and
+where $d$ is some metric, $cal(L)$ is some loss function, and
 $ C_x = (cal(L)(y, f (x)))/(cal(L)(y_i, f (x_i))) $
 ]
 
 #theorem[
- Suppose that a continuous function (model) f is trained to minimize the loss function $ cal(L) = (Y − f (X))^T (γ I + τ cal(P))(Y − f (X)) " " (4.17) $, where $(X, Y) ∈  tilde(cal(D))$ are training data, sampled from the population $cal(D)$. Assume that the training process can achieve optimality and that the loss for each data point is at least some non-zero small number. Then, the generalization error (calculated using $(X, Y) ∈ cal(D)$)
+ Suppose that a continuous function (model) $f$ is trained to minimize the loss function $ cal(L) = (Y − f (X))^T (γ I + τ cal(P))(Y − f (X)) " " (4.17), $ where $(X, Y) ∈  tilde(cal(D))$ are training data, sampled from the population $cal(D)$. Assume that the training process can achieve optimality and that the loss for each data point is at least some non-zero small number. Then, the generalization error 
+ // (calculated using $(X, Y) ∈ cal(D)$)
 
 $ ε = (Y − f (X))^T (Y − f (X)) " " (4.18) $
-is smaller, training using eq. (4.17) than training using eq. (4.18) if and only if for all $(x_i, y_i) ∈ cal(D)$,
+is smaller, training using eq. (4.17) than training using eq. (4.18) iff for all $(x_i, y_i) ∈ cal(D)$,
 $
 sum_i (| sum_j (gamma+ lambda_i) q_(j i) - tilde(C)_(x_i)| - |1-tilde(C)_(x_i)|)(y_i - f(x_i))^2 < 0 
 $
 ]
 
-== Key issues in LUSI 
+== LUSI: Kernel Analysis
 
-- The predicates collapse, by the formulation. Construction information is lost
+#let ht = $gamma$
+#let cV = $cal(V)$
+#let cP = $cal(P)$
+#let tk = $(ht I + tau cP)K$
+#let lamt = $tilde(lambda)$
+#let lam = $lambda$
+#let vp = $(ht I + tau cP)$
 
-- Finding predicates using symmetry will not lead to useful predicates, due to theorem earlier
+To simplify analysis, we assume intercept $c = 0$ and $y = A^T K (x)$, and we assume $cV = I$, and $cP$ is low-rank matrix, since the number of invariants is small in general.
 
-- *We content the key is to utilize and compose information*
+// Then, we assume there exist eigenvalue decomposition that 
+// $ tk = (ht I + tau P) Phi^T Lambda Phi, $
+// while we have $K = Phi^T Lambda Phi$. 
+// We are interested in the comparing the covariance of reconstruction operator
+
+Consider the kernel solution to a LUSI problem:
+
+$
+A &= (vp K+ delta I_n)^(-1)(ht I + tau cP) Y\ 
+&= (K + delta vp^(-1))^(-1) Y \
+$
+
+
+== LUSI: Kernel Analysis
+#let crimson = rgb("#c00000")
+#let greybox(..args, body) = rect(fill: luma(95%), stroke: 0.5pt, inset: 0pt, outset: 10pt, ..args, body)
+#let redbold(body) = {
+  set text(fill: crimson, weight: "bold")
+  body
+}
+#let blueit(body) = {
+  set text(fill: blue)
+  body
+}
+
+For simplicity, we consider $tau = 1$, since we can always rescale $cP$ before plug it into the formula. Using Kailath Variant of Woodbury identity, we have 
+$
+(ht I + cP^T)^(-1) &= (ht I + Psi Psi^T)^(-1)\
+&= 1/ht I - 1/(ht^2)Psi (I + 1/ht Psi^T Psi)^(-1) Psi^T
+$
+
+Then, LUSI solution is kernel ridge regression solution with modified kernel:
+
+$ K redbold( -delta/ht^2 Psi (I + 1/ht Psi^T Psi)^(-1) Psi^T pin(2)). $
+
+#pause
+
+- The key is whether and how *2nd* term affect the eigenvalues and eigenfunctions. 
+- Better generalization if modified kernel has better alignment with the task.
+
+#pinit-highlight(1, 2)
+#pinit-point-from(2)[It is simple.]
 
 == Experiments: Incremental kernel
 
 #place(top+right)[
-#image("imgs/pixel.png", width: 50%)
+  #image("imgs/pixel.png", width: 50%)
 ]
 
 - Using incremental kernel, we are able to \ improve the performance, while using \ same information with LUSI cannot. 
@@ -481,13 +790,27 @@ $
 //   - Haar invariants kernels 
 //   - Knowledge injections: known equivalence
 
-== Additive Haar Invariant Kernel
+== Key issues in LUSI 
+
+- The predicates collapse, by the formulation. Construction information is lost
+
+- Finding predicates using symmetry will not lead to useful predicates, due to theorem earlier
+
+- *We content the key is to utilize and compose information*
+
+== Haar Invariant Kernel
+
+
+- *Haar invariant kernels are invariants against a group of actions*
 
 - @haasdonk2004 @haasdonk2007
 
 - With a group of actions $G_0$, we can create invariant kernel as
 $ K := integral_(G_0) integral_(G_0) k_0(g x_1, g^prime x_2) d g d g^prime $
 
+== Additive Haar Invariant Kernel
+
+*With normal subgroups, we can build additive Haar invariant kernels*
 
 #proposition("Additive Invariant Kernel")[
   Let $H$ be normal subgroups of a group of action $G$. Let $cal(A)$ be the set of representatives of the cosets formed by $H$. Then, for an additive kernel $k$, the invariant kernel constructed as below with respect to the Haar measure is additive invariant against actions in $G$:
@@ -501,29 +824,55 @@ normal groups is also invariant against the actions in G.
 ]
 
   
-== Optimal Recovery and Learning theory 
+// == Optimal Recovery and Learning theory 
 
-- Optimal recovery:
+// - Optimal recovery:
 
-  - Recover a function that satisfies all the functionals constraints.
+//   - Recover a function that satisfies all the functionals constraints.
 
 
-- Traditional being treated as separated problems
-  - Optimal recovery deals with fixed evaluation 
-  - Learning theory deals with i.i.d random samples
-  - _recent works such as @foucart2022 connect these two_
+// #pause
 
-== Optimal Recovery and Invariants
+// - Traditional being treated as separated problems
+//   - Optimal recovery deals with fixed evaluation 
+//   - Learning theory deals with i.i.d random samples
+//   - _recent works such as @foucart2022 connect these two_
+
+  
+== Optimal Recovery and Complete Learning Problem
 
 - Learning can be interpreted as an optimal recovery problem:
   - Invariants are the properties of the target function
   - Data are simply evaluation functionals.
 
+#pause 
+
 - *Complete learning problem*
-  - Data samples ${z_i}$ + functionals ${l_i}$
-  - Existing invariants learning algorithms can be interpreted as special cases
+  - Data samples ${z_i}$ + functionals ${ell_i}$
+  // - Existing invariants learning algorithms can be interpreted as special cases
   - In LUSI, the @vapnik2019 realize the importance of using functinals, but they didn't provide learning targets for the functionals
   - Bounds can be derived based upon the Chebychev’s ball and classical generalization bounds
+
+
+== An Analogy of CT Scan
+
+#place(right,figure(caption: "CT Scan & Radon Transform")[#image("ctscan.png")], dy: 6em)
+
+#block(width: 40%)[
+- In medical imaging, such as CT, we use cross section sensor to extract information
+
+- Cross section images are constructed as an inverse problem
+
+]
+  
+#pause
+
+#block(width: 40%)[
+  - *What if we have some damaged image and partial sensor data?*
+
+  - This is analogy of complete learning problem, if we consider 2D image as a function
+]
+
 
 // == Predicates and Radon Transform
 
@@ -562,24 +911,45 @@ normal groups is also invariant against the actions in G.
 #let rad = $op("rad")$
 
 - Suppose functional invariant operator $cal(I): F arrow RR^n $, with null space
-$ cal(N) := {f in F: cal(I) = 0} subset F $
-- Further suppose that candidate set $cal(K)$ consists of function can approximate finite dimensional $V subset X$ with error less than $epsilon$. 
+$ cal(N) := {f in F: cal(I)(f) = 0} subset F $
+#pause
+- Further suppose that candidate set $cal(K)$ consists of functions that can approximate finite dimensional $V subset F$ with error less than $epsilon$. 
+#pause
 - Chebyshev radius of $S subset cal(X)$ defined as
-$ op("rad")(S) := inf_cal(X) inf{r: S subset B(a, r)}. $
-
-- According to @devore2017,  we also have $rad(cal(K)) = epsilon mu(cal(N),V)$, where
-$ mu(X, Y) = sup_(f in X) (||f||)/"dist"(f, Y). $
+$ op("rad")(S) := inf_(a in cal(X)) inf{r: S subset B(a, r)}. $
+#pause
+- According to @devore2017,  we also have\ *$rad(cal(K)) < 2epsilon mu(cal(N),V)$*, where
+$ mu(cal(N), V) = sup_(f in cal(N)) (||f||)/"dist"(f, V). $
 
 // - The wost case radius $R(S) := sup_w rad(S_w)$, where $w$ is the image of $cal(I)$.
+
+== Bounds with Invariants Functionals
 
 #proposition[
   Suppose $cal(K)$ is the candidate space which approximates a finite-dimensional Banach space $V$, which is bounded by $M$, i.e., $cal(K) = { f : "dist"_(L∞) ( f, V) ≤ ε}, cal(I)$ is an invariant operator with null space $cal(N)$ defined earlier. Then we have
 $
-P_(z in Z^m)(sup_(f in cal(K)) L_z(f) <= xi) >= 1 - ((32 M epsilon mu(cal(N), V))/xi)^N exp(-(-m xi^2)/(8M^4))
+P_(z in Z^m)(sup_(f in cal(K)) cal(L)_z(f) <= xi) >= 1 - ((32 M epsilon mu(cal(N), V))/xi)^N exp(-(-m xi^2)/(8M^4))
 $
-where $L_z( f ) = integral_(x in z) ( f (x) − y)^2d μ(x, y)$
+where $cal(L)_z( f ) = integral_(x in z) ( f (x) − y)^2d μ(x, y)$
 ]
 
+= Future Directions #sym.amp Expected Outcomes
+
+== Research Directions with Invariants
+
+- More rigor and precise statements regarding the hypothesis recovery
+
+- More concrete learning scheme explicitly utilize invariants / predicates
+
+  - Using invariant functionals to help with kernel alignments
+  
+  - A LUSI method that actually works
+
+  - Tighter generalization bounds
+
+- Extend analysis into Banach Space, RKBS.
+
+// - Extend general formulation for invariant functionals 
 
 
 // == Restricted Approximation Error
@@ -642,21 +1012,21 @@ where $L_z( f ) = integral_(x in z) ( f (x) − y)^2d μ(x, y)$
 // - build bounds around the randomness of $X_m$, connecting with $d^m,#[ or ] d_m$.
 
 
+// = Characterization of Hypothesis Space
 
-  
-
-= Characterization of Hypothesis Space
-== A Heavy-tailed Function Space
+== Characterization of Generalization
 
 
 - Motivated by the empirical work @martin2020, heavy tailed empirical spectral density tend to generalize better. 
 
 - This begs the question, is there a certain function class $cal(F) subset cal(B)$, that is more suitable for learning?
 
-- Error bound for stability and robustness #sym.arrow.l.r.stroked sparsity
+- Can these characteristics be used as invariant functionals?
 
-  - Sparsely recovered hypothesis implies sparsity
-  - Stability and recovery error requires heavy tailed eigenvalue
+// - Error bound for stability and robustness #sym.arrow.l.r.stroked sparsity
+
+//   - Stable recovered hypothesis implies sparsity
+//   - Stability and recovery error requires heavy tailed eigenvalue
 
 //Missing some other aspects
 
@@ -668,7 +1038,7 @@ where $L_z( f ) = integral_(x in z) ( f (x) − y)^2d μ(x, y)$
 
 // == Local Learnability & Reconstruction
 
-// - Related to local optimal reconstruction
+// - Related to local optimal *reconstruction*
 // $ op("lwce")(y, hat(f)) := sup_(f in cal(K)\ Lambda(f) = y) ||f-hat(f)|| $
 // - Adapt to situations where sampling is not uniform and function is smooth varying
 // - Connect the error with sampling rate:
@@ -678,7 +1048,7 @@ where $L_z( f ) = integral_(x in z) ( f (x) − y)^2d μ(x, y)$
 
 = Applications
 
-== Domain Adaptations: Feasibility and Bounds
+== Domain Adaptations: Refine Generaliztion Bounds
 
 #let err = $cal(E)$
 - We can also bound the adaptation error with invariants. 
@@ -687,47 +1057,48 @@ where $L_z( f ) = integral_(x in z) ( f (x) − y)^2d μ(x, y)$
 
 $ 
 rho_L (cal(D), cal(D')) &:= sup_(f, f') |err_cal(D)(f, f')-err_(cal(D)')(f, f')| \
-&= sup_(f, f')|integral_cal(X) L (d cal(D) - d cal(D'))| \
+&= sup_(f, f')|integral_cal(X) cal(L) (d cal(D) - d cal(D'))| \
 $
-where $L(x) = (f(x)-f'(x))^2$.
+where $cal(L)(x) = (f(x)-f'(x))^2$.
 
-==
-- Heavily influence by @zhao2019, we can bound adaptation error with the help of invariants.
+== Domain Adaptations: Refine Generalization Bounds
+
+- Influenced by @zhao2019@ben-david2010, we can bound adaptation error with the help of invariants.
+
 #proposition[
   Suppose $cal(K)$ is the candidate space which approximates a finite-dimensional Banach space $V$, which is bounded by $M$, i.e., $cal(K) = { f : "dist"_(L∞) (f, V) ≤ ε}, cal(I)$ is an invariant operator with null space $cal(N)$ defined earlier. In addition, suppose that $(cal(D)_S , f_S ), (cal(D)_T , f_T )$ are the source domain and the target domain, respectively.
-$ err_T ( f ) ≤ err_S ( f ) + ρ_L (cal(D)_S , cal(D)_T ) + 16ε^2 μ^2(N, V) $
+$ err_T ( f ) ≤ err_S ( f ) + ρ_L (cal(D)_S , cal(D)_T ) + 16ε^2 μ^2(cal(N), V) $
 where $ρ_L$, and $μ$ is defined earlier.
 ]
 
-==
+// ==
 
 
+// *We will primarily investigate the following two cases:*
+// / case 1: There exists functions that are optimal in both domains, but we only learned suboptimal representations from the domain; hence, domain adaptation requires us to update the representation map $phi$. 
 
-*We will primarily investigate the following two cases:*
-/ case 1: There exists functions that are optimal in both domains, but we only learned suboptimal representations from the domain; hence, domain adaptation requires us to update the representation map $phi$. 
+// / case 2: We need to adjust the hypothesis class for the target domain, this is typically done by adjusting priors. However, we will focus on exploring the direction through the perspective of predicates.
 
-/ case 2: We need to adjust the hypothesis class for the target domain, this is typically done by adjusting priors. However, we will focus on exploring the direction through the perspective of predicates.
+// == Domain Adaptations: Feasibility and Bounds
 
-== Domain Adaptations: Feasibility and Bounds
-
-In *Case 1*, we aim to derive the generalization bound by observing the latent representation. 
-
-
-- We know feature alignment is not enough, data alignment is also important @zhao2019
-
-- Can we identify the function space that can be adapted well vs. ones that cannot?
-  - Representation learning vs. Non-representation learning
-
-- To what extent can we improve this bound using a small amount of data from the target domain?
-
-  - This is a natural extension to @ben-david2006: we utilize the properties of the function spaces 
+// In *Case 1*, we aim to derive the generalization bound by observing the latent representation. 
 
 
-== Domain Adaptations: Feasibility and Bounds
+// - We know feature alignment is not enough, data alignment is also important @zhao2019
 
-In *case 2*, we aim to derive error bound for domain adaptation with knowledge injection (predicates). 
+// - Can we identify the function space that can be adapted well vs. ones that cannot?
+//   - Representation learning vs. Non-representation learning
 
-- To what extent we can improvement adaptation if there are common functional predicates ${l_i}$.
+// - To what extent can we improve this bound using a small amount of data from the target domain?
+
+//   - This is a natural extension to @ben-david2006: we utilize the properties of the function spaces 
+
+
+// == Domain Adaptations: Feasibility and Bounds
+
+// In *case 2*, we aim to derive error bound for domain adaptation with knowledge injection (predicates). 
+
+// - To what extent we can improvement adaptation if there are common functional predicates ${l_i}$.
 
 
 
@@ -747,7 +1118,7 @@ In *case 2*, we aim to derive error bound for domain adaptation with knowledge i
 
 = Q & A
 
-#text(size: 3em)[#alert[Thanks and Q&A]]
+// #text(size: 3em)[#alert[Thanks and Q&A]]
 
 == Appendix
 
