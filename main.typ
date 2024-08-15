@@ -5,12 +5,12 @@
 #import "@preview/m-jaxon:0.1.1" as m-jaxon
 #import "@preview/fletcher:0.5.1" as fletcher: diagram, node, edge
 #import fletcher.shapes: house, hexagon
-#import "defs.typ": *
+
 #import "@preview/ctheorems:1.1.2": *
 #import "@preview/pinit:0.1.3": *
 
 #show: thmrules.with(qed-symbol: $square$)
-
+#let ss = $L(epsilon, cal(C))$
 #let lemma = thmbox("lemma", "Lemma", fill: rgb("#eeffee")).with(numbering: none)
 #let theorem = thmbox("theorem", "Theorem", fill: rgb("#eeffee")).with(numbering: none)
 #let proposition = thmbox("proposition", "Proposition", fill: rgb("#eeffee")).with(numbering: none)
